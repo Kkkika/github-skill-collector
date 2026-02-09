@@ -1,0 +1,5 @@
+# .trae/
+GITHUB_TOKEN.txt
+.trae/skills/skill-collector/scripts/__pycache__/
+*.pyc
+.trae/skills/skill-creator/

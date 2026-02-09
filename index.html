@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Skill Collector</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="GitHub Skill Collector">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/docsify/lib/themes/dark.css">
+  <style>
+    :root {
+      /* GitHub Dark Dimmed 风格 */
+      --base-bg: #22272e;
+      --base-color: #adbac7;
+      
+      --bg-card: #2d333b; 
+      --border-color: #444c56;
+      --accent: #539bf5; /* 蓝色系 */
+      --text-muted: #ffffff;
+      --text-normal: #adbac7;
+      --code-bg: #2d333b;
+      
+      --sidebar-bg: #1c2128;
+      --sidebar-border: #444c56;
+      --sidebar-color: #adbac7;
+    }
+    
+    body { 
+        background-color: var(--base-bg) !important;
+        color: var(--base-color) !important;
+        font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif !important;
+    }
+    
+    /* 侧边栏优化 */
+    .sidebar {
+        background-color: var(--sidebar-bg) !important;
+        border-right: 1px solid var(--sidebar-border) !important;
+        color: var(--sidebar-color) !important;
+        width: auto;
+        max-width: 250px !important;
+    }
+    .sidebar ul li a { color: var(--text-muted) !important; transition: color 0.2s; }
+    .sidebar ul li.active > a, .sidebar ul li a:hover { color: var(--accent) !important; border-right: 2px solid var(--accent); }
+    .sidebar-nav > ul > li > a { font-weight: 600; color: var(--text-normal) !important; }
+
+    /* 调整主内容区域左边距，适配新的 sidebar 宽度 */
+    /* 仅在非关闭状态下生效，避免影响移动端或收起状态 */
+    body:not(.close) main {
+        padding-left: 250px !important;
+    }
+    body:not(.close) .sidebar-toggle {
+        left: 250px !important;
+        width: 36px !important; /* 限制宽度 */
+        background-color: transparent !important;
+    }
+    /* 收起状态下恢复默认位置 */
+    body.close .sidebar-toggle {
+        left: 0 !important;
+        width: 36px !important;
+        background-color: transparent !important;
+    }
+
+    /* 侧边栏详情页模式：只显示当前 Skill 和首页 */
+    .sidebar-nav.detail-mode > ul > li {
+        display: none !important;
+    }
+    .sidebar-nav.detail-mode > ul > li.active {
+        display: block !important;
+    }
+    /* 始终显示第一个 li (通常是首页) */
+    .sidebar-nav.detail-mode > ul > li:first-child {
+        display: block !important;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+    }
+
+    /* 正文区域优化 */
+    .content { 
+        padding-top: 20px; 
+        left: 233px;
+    }
+    .markdown-section { 
+        margin: 0 auto; 
+        max-width: 94%; 
+        padding: 30px 15px 40px; 
+        position: relative 
+    }
+    .markdown-section h1, .markdown-section h2, .markdown-section h3 { color: var(--text-normal) !important; font-weight: 600; }
+    .markdown-section code { background-color: var(--code-bg) !important; color: var(--accent) !important; border-radius: 4px; padding: 2px 4px; }
+    .markdown-section pre { background-color: #1c2128 !important; border: 1px solid var(--border-color); border-radius: 6px; }
+    .markdown-section blockquote { color: var(--text-muted) !important; border-left-color: var(--border-color) !important; }
+    .markdown-section a { color: var(--accent) !important; text-decoration: none; }
+    .markdown-section a:hover { text-decoration: underline; }
+
+    /* 卡片视图样式 */
+    .cards-wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; padding: 1rem 0; margin-bottom: 2rem; }
+    .card { 
+        display: block; 
+        background: var(--bg-card); 
+        border: 1px solid var(--border-color); 
+        border-radius: 8px; 
+        padding: 1.5rem; 
+        text-decoration: none !important; 
+        color: inherit !important; 
+        transition: all 0.2s ease; 
+        position: relative; 
+        cursor: pointer; 
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .card:hover { 
+        border-color: var(--accent); 
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    .card-badge { font-size: 0.75rem; color: var(--text-muted); background: #22272e; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color); }
+    .card-title { margin: 0 0 0.75rem !important; font-size: 1.1rem !important; color: var(--accent) !important; font-weight: 600; border: none !important; }
+    .card-desc { margin: 0 !important; font-size: 0.95rem; color: var(--text-muted) !important; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.6; }
+    .card-link { font-size: 0.85rem; color: var(--accent) !important; cursor: pointer; display: inline-block; font-weight: 500; }
+    .card-link:hover { text-decoration: underline !important; }
+    
+    .site-footer { border-top: 1px solid var(--border-color); margin-top: 60px; padding-top: 30px; }
+    .repo-list { list-style: none; padding: 0; }
+    .repo-list li { margin-bottom: 12px; display: flex; align-items: center; }
+    .repo-rank { color: var(--text-muted); margin-right: 12px; font-family: monospace; min-width: 30px; }
+    .stars { color: #e3b341; font-size: 0.9em; margin-left: 8px; }
+
+    strong { font-size: 12px; }
+    
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    window.$docsify = {
+      // homepage: 'home.md', // 已移除，使用插件注入 HTML
+      // name: 'Skill Collector', // 用户要求移除
+      repo: '',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      search: {
+        maxAge: 86400000,
+        paths: 'auto',
+        placeholder: '搜索...',
+        noData: '未找到结果',
+        depth: 4,
+        hideOtherSidebarContent: false,
+      },
+      copyCode: {
+        buttonText: '复制',
+        errorText: '错误',
+        successText: '已复制'
+      },
+      plugins: [
+        function(hook, vm) {
+          // 注入首页内容 (由 Python 生成并插入)
+          const HOME_HTML = "\n<div class=\"home-content\">\n  <h1>Skill \u5c55\u793a</h1>\n  <p>\u81ea\u52a8\u6536\u96c6\u6307\u5b9a GitHub \u4ed3\u5e93\u4e0b\u7684\u6240\u6709 Skill\uff08SKILL.md\uff09\uff0c\u751f\u6210\u5c55\u793a\u7ad9\u70b9\u3002</p>\n  <p style=\"color: var(--text-muted); margin-bottom: 2rem;\">\n    \u5df2\u6536\u5f55 <strong>3</strong> \u4e2a\u4ed3\u5e93\uff0c\u5171 <strong>38</strong> \u4e2a Skill\u3002\n  </p>\n\n  <div class=\"cards-wrap\">\n  <a class=\"card\" href=\"#/skill-pages/advanced-evaluation.md\" target=\"_blank\"><h3 class=\"card-title\">advanced-evaluation</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u5b9e\u65bd\u9ad8\u7ea7\u8bc4\u4f30\u201d\u3001\u201c\u6d4b\u8bd5\u590d\u6742\u4ee3\u7406\u201d\u3001\u201c\u9a8c\u8bc1\u63a8\u7406\u94fe\u201d\u6216\u63d0\u53ca\u57fa\u4e8e\u6a21\u578b\u7684\u8bc4\u4f30\u3001\u5bf9\u6297\u6027\u6d4b\u8bd5\u6216\u8bc4\u4f30\u6d41\u6c34\u7ebf\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;compare model outputs&quot;, &quot;create evaluation rubrics&quot;, &quot;mitigate evaluation bias&quot;, or mentions direct</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/advanced-evaluation/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/algorithmic-art.md\" target=\"_blank\"><h3 class=\"card-title\">algorithmic-art</h3><p class=\"card-desc\">\u4f7f\u7528 p5.js \u521b\u5efa\u5177\u6709\u786e\u5b9a\u6027\u968f\u673a\u548c\u4ea4\u4e92\u5f0f\u53c2\u6570\u63a2\u7d22\u7684\u7b97\u6cd5\u827a\u672f\u3002\u5f53\u7528\u6237\u8bf7\u6c42\u4f7f\u7528\u4ee3\u7801\u521b\u4f5c\u827a\u672f\u3001\u751f\u6210\u5f0f\u827a\u672f\u3001\u7b97\u6cd5\u827a\u672f\u3001\u6d41\u573a\u6216\u7c92\u5b50\u7cfb\u7edf\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002\u521b\u5efa\u539f\u521b\u7684\u7b97\u6cd5\u827a\u672f\u800c\u975e\u590d\u5236\u73b0\u6709\u827a\u672f\u5bb6\u7684\u4f5c\u54c1\uff0c\u4ee5\u907f\u514d\u7248\u6743\u4fb5\u72af\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/algorithmic-art/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/bdi-mental-states.md\" target=\"_blank\"><h3 class=\"card-title\">bdi-mental-states</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u5b9e\u73b0 BDI \u4ee3\u7406\u201d\u3001\u201c\u6dfb\u52a0\u5fc3\u7406\u72b6\u6001\u201d\u3001\u201c\u6a21\u62df\u4fe1\u5ff5\u548c\u610f\u56fe\u201d\u6216\u63d0\u53ca BDI \u67b6\u6784\u3001\u8ba4\u77e5\u5efa\u6a21\u6216\u4ee3\u7406\u5fc3\u7406\u5b66\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;implement BDI architecture&quot;, &quot;create belief-desire-intention models&quot;, &quot;transform RDF to beliefs</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/bdi-mental-states/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/book-sft-pipeline.md\" target=\"_blank\"><h3 class=\"card-title\">book-sft-pipeline</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u4e3a SFT \u5904\u7406\u4e66\u7c4d\u201d\u3001\u201c\u521b\u5efa\u5fae\u8c03\u6570\u636e\u96c6\u201d\u3001\u201c\u6e05\u7406\u6587\u672c\u6570\u636e\u201d\u6216\u63d0\u53ca\u6570\u636e\u51c6\u5907\u3001\u76d1\u7763\u5fae\u8c03\u6216\u6570\u636e\u96c6\u521b\u5efa\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;create SFT dataset&quot;, &quot;train style model&quot;, &quot;extract ePub text&quot;, or mentions style transfer, LoRA t</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/examples/book-sft-pipeline/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/brand-guidelines.md\" target=\"_blank\"><h3 class=\"card-title\">brand-guidelines</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u9075\u5faa\u54c1\u724c\u6307\u5357\u201d\u3001\u201c\u4fdd\u6301\u54c1\u724c\u58f0\u97f3\u201d\u3001\u201c\u68c0\u67e5\u54c1\u724c\u5408\u89c4\u6027\u201d\u6216\u63d0\u53ca\u54c1\u724c\u8bc6\u522b\u3001\u8bed\u6c14\u6216\u98ce\u683c\u6307\u5357\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/brand-guidelines/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/canvas-design.md\" target=\"_blank\"><h3 class=\"card-title\">canvas-design</h3><p class=\"card-desc\">\u4f7f\u7528\u8bbe\u8ba1\u54f2\u5b66\u521b\u5efa\u7cbe\u7f8e\u7684 .png \u548c .pdf \u6587\u6863\u89c6\u89c9\u827a\u672f\u3002\u5f53\u7528\u6237\u8981\u6c42\u521b\u5efa\u6d77\u62a5\u3001\u827a\u672f\u4f5c\u54c1\u3001\u8bbe\u8ba1\u6216\u5176\u4ed6\u9759\u6001\u4f5c\u54c1\u65f6\uff0c\u60a8\u5e94\u8be5\u4f7f\u7528\u6b64\u6280\u80fd\u3002\u521b\u5efa\u539f\u521b\u7684\u89c6\u89c9\u8bbe\u8ba1\uff0c\u7edd\u4e0d\u590d\u5236\u73b0\u6709\u827a\u672f\u5bb6\u7684\u4f5c\u54c1\u4ee5\u907f\u514d\u4fb5\u72af\u7248\u6743\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/canvas-design/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/comprehensive-research-agent.md\" target=\"_blank\"><h3 class=\"card-title\">comprehensive-research-agent</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u8fdb\u884c\u6df1\u5ea6\u7814\u7a76\u201d\u3001\u201c\u5206\u6790\u591a\u4e2a\u6765\u6e90\u201d\u3001\u201c\u751f\u6210\u7814\u7a76\u62a5\u544a\u201d\u6216\u63d0\u53ca\u5168\u9762\u7684\u7f51\u7edc\u641c\u7d22\u3001\u4e8b\u5b9e\u6838\u67e5\u6216\u591a\u6b65\u9aa4\u7814\u7a76\u4efb\u52a1\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 in research tasks with multiple tool calls</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/examples/interleaved_thinking/generated_skills/comprehensive-research-agent/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/context-compression.md\" target=\"_blank\"><h3 class=\"card-title\">context-compression</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u538b\u7f29\u4e0a\u4e0b\u6587\u201d\u3001\u201c\u603b\u7ed3\u5386\u53f2\u8bb0\u5f55\u201d\u3001\u201c\u51cf\u5c11\u4ee4\u724c\u8ba1\u6570\u201d\u6216\u5904\u7406\u8d85\u51fa\u4e0a\u4e0b\u6587\u9650\u5236\u7684\u5185\u5bb9\u3001\u63d0\u53ca\u4e0a\u4e0b\u6587\u84b8\u998f\u6216\u4fe1\u606f\u5bc6\u5ea6\u4f18\u5316\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 conversation history&quot;, &quot;implement compaction&quot;, &quot;reduce token usage&quot;, or mentions context compr</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/context-compression/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/context-degradation.md\" target=\"_blank\"><h3 class=\"card-title\">context-degradation</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u8bca\u65ad\u4e0a\u4e0b\u6587\u95ee\u9898\u201d\u3001\u201c\u4fee\u590d\u9057\u5fd8\u201d\u3001\u201c\u5206\u6790\u6ce8\u610f\u529b\u6545\u969c\u201d\u6216\u63d0\u53ca\u6ce8\u610f\u529b\u6f02\u79fb\u3001\u6307\u4ee4\u9075\u5faa\u5931\u8d25\u3001\u4e2d\u95f4\u4e22\u5931\u6548\u5e94\u6216\u4e0a\u4e0b\u6587\u8fc7\u8f7d\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;fix lost-in-middle issues&quot;, &quot;debug agent failures&quot;, &quot;understand context poisoning&quot;, or menti</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/context-degradation/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/context-engineering-collection.md\" target=\"_blank\"><h3 class=\"card-title\">context-engineering-collection</h3><p class=\"card-desc\">\u4e0a\u4e0b\u6587\u5de5\u7a0b\u4ee3\u7406\u6280\u80fd\u7684\u7efc\u5408\u5408\u96c6\uff0c\u5305\u542b\u591a\u4ee3\u7406\u6a21\u5f0f\u3001\u8bc4\u4f30\u548c\u4f18\u5316\u6280\u672f\u3002 architectures, and production agent systems. Use when building, optimizing, or debugging agent systems that require effective co</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/context-fundamentals.md\" target=\"_blank\"><h3 class=\"card-title\">context-fundamentals</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u7406\u89e3\u4e0a\u4e0b\u6587\u201d\u3001\u201c\u89e3\u91ca\u4e0a\u4e0b\u6587\u7a97\u53e3\u201d\u3001\u201c\u5b66\u4e60\u63d0\u793a\u5de5\u7a0b\u201d\u6216\u63d0\u53ca\u6ce8\u610f\u529b\u673a\u5236\u3001\u4e0a\u4e0b\u6587\u957f\u5ea6\u3001\u63a8\u7406\u80fd\u529b\u6216 LLM \u57fa\u7840\u77e5\u8bc6\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;explain context windows&quot;, &quot;design agent architecture&quot;, &quot;debug context issues&quot;, &quot;optimize co</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/context-fundamentals/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/context-optimization.md\" target=\"_blank\"><h3 class=\"card-title\">context-optimization</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u4f18\u5316\u4e0a\u4e0b\u6587\u201d\u3001\u201c\u51cf\u5c11\u4ee4\u724c\u4f7f\u7528\u201d\u3001\u201c\u63d0\u9ad8\u63d0\u793a\u6548\u7387\u201d\u6216\u63d0\u53ca\u63d0\u793a\u538b\u7f29\u3001\u53bb\u9664\u5197\u4f59\u3001\u7ed3\u6784\u5316\u8f93\u5165\u6216\u4e0a\u4e0b\u6587\u6548\u7387\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 token costs&quot;, &quot;improve context efficiency&quot;, &quot;implement KV-cache optimization&quot;, &quot;partition context&quot;</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/context-optimization/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/digital-brain.md\" target=\"_blank\"><h3 class=\"card-title\">digital-brain</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u5199\u5e16\u5b50\u201d\u3001\u201c\u68c0\u67e5\u94fe\u63a5\u201d\u3001\u201c\u7ba1\u7406\u6570\u5b57\u4efb\u52a1\u201d\u6216\u5904\u7406\u4e00\u822c\u6027\u7684\u6570\u5b57\u52a9\u7406\u4efb\u52a1\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 my voice&quot;, &quot;look up contact&quot;, &quot;prepare for meeting&quot;, &quot;weekly review&quot;, &quot;track goals&quot;, or mentions personal brand, </p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/examples/digital-brain-skill/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/doc-coauthoring.md\" target=\"_blank\"><h3 class=\"card-title\">doc-coauthoring</h3><p class=\"card-desc\">\u5f15\u5bfc\u7528\u6237\u901a\u8fc7\u7ed3\u6784\u5316\u5de5\u4f5c\u6d41\u5171\u540c\u64b0\u5199\u6587\u6863\u3002\u5f53\u7528\u6237\u60f3\u8981\u7f16\u5199\u6587\u6863\u3001\u63d0\u6848\u3001\u6280\u672f\u89c4\u8303\u3001\u51b3\u7b56\u6587\u6863\u6216\u7c7b\u4f3c\u7684\u7ed3\u6784\u5316\u5185\u5bb9\u65f6\u4f7f\u7528\u3002\u6b64\u5de5\u4f5c\u6d41\u5e2e\u52a9\u7528\u6237\u9ad8\u6548\u4f20\u9012\u4e0a\u4e0b\u6587\u3001\u901a\u8fc7\u8fed\u4ee3\u7cbe\u70bc\u5185\u5bb9\uff0c\u5e76\u9a8c\u8bc1\u6587\u6863\u5bf9\u8bfb\u8005\u662f\u5426\u6709\u6548\u3002\u5f53\u7528\u6237\u63d0\u5230\u7f16\u5199\u6587\u6863\u3001\u521b\u5efa\u63d0\u6848\u3001\u8d77\u8349\u89c4\u8303\u6216\u7c7b\u4f3c\u6587\u6863\u4efb\u52a1\u65f6\u89e6\u53d1\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/doc-coauthoring/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/docx.md\" target=\"_blank\"><h3 class=\"card-title\">docx</h3><p class=\"card-desc\">\u5168\u9762\u7684\u6587\u6863\u521b\u5efa\u3001\u7f16\u8f91\u548c\u5206\u6790\u529f\u80fd\uff0c\u652f\u6301\u4fee\u8ba2\u8ffd\u8e2a\u3001\u8bc4\u8bba\u3001\u683c\u5f0f\u4fdd\u7559\u548c\u6587\u672c\u63d0\u53d6\u3002\u5f53 Claude \u9700\u8981\u5904\u7406\u4e13\u4e1a\u6587\u6863\uff08.docx \u6587\u4ef6\uff09\u65f6\u4f7f\u7528\uff0c\u5305\u62ec\uff1a(1) \u521b\u5efa\u65b0\u6587\u6863\uff0c(2) \u4fee\u6539\u6216\u7f16\u8f91\u5185\u5bb9\uff0c(3) \u4f7f\u7528\u4fee\u8ba2\u8ffd\u8e2a\uff0c(4) \u6dfb\u52a0\u8bc4\u8bba\uff0c\u6216\u4efb\u4f55\u5176\u4ed6\u6587\u6863\u4efb\u52a1</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/docx/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/evaluation.md\" target=\"_blank\"><h3 class=\"card-title\">evaluation</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u8bc4\u4f30\u4ee3\u7406\u6027\u80fd\u201d\u3001\u201c\u521b\u5efa\u6d4b\u8bd5\u96c6\u201d\u3001\u201c\u6d4b\u91cf\u51c6\u786e\u6027\u201d\u6216\u63d0\u53ca\u57fa\u51c6\u6d4b\u8bd5\u3001\u8bc4\u4f30\u6307\u6807\u3001\u6d4b\u8bd5\u9a71\u52a8\u5f00\u53d1\u6216\u8bc4\u4f30\u6846\u67b6\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;build test framework&quot;, &quot;measure agent quality&quot;, &quot;create evaluation rubrics&quot;, or mentions LLM-as-ju</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/evaluation/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/filesystem-context.md\" target=\"_blank\"><h3 class=\"card-title\">filesystem-context</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u5c06\u4e0a\u4e0b\u6587\u5378\u8f7d\u5230\u6587\u4ef6\u201d\u3001\u201c\u521b\u5efa\u6587\u4ef6\u7cfb\u7edf\u8bb0\u5fc6\u201d\u3001\u201c\u7ba1\u7406\u57fa\u4e8e\u6587\u4ef6\u7684\u72b6\u6001\u201d\u6216\u63d0\u53ca\u957f\u671f\u5b58\u50a8\u3001\u6587\u4ef6 I/O \u6216\u6301\u4e45\u5316\u4e0a\u4e0b\u6587\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;implement dynamic context discovery&quot;, &quot;use filesystem for agent memory&quot;, &quot;reduce context w</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/filesystem-context/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/frontend-design.md\" target=\"_blank\"><h3 class=\"card-title\">frontend-design</h3><p class=\"card-desc\">\u521b\u5efa\u5177\u6709\u9ad8\u8bbe\u8ba1\u8d28\u91cf\u7684\u72ec\u7279\u3001\u751f\u4ea7\u7ea7\u524d\u7aef\u754c\u9762\u3002\u5f53\u7528\u6237\u8981\u6c42\u6784\u5efa Web \u7ec4\u4ef6\u3001\u9875\u9762\u3001\u5de5\u4ef6\u3001\u6d77\u62a5\u6216\u5e94\u7528\u7a0b\u5e8f\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\uff08\u793a\u4f8b\u5305\u62ec\u7f51\u7ad9\u3001\u843d\u5730\u9875\u3001\u4eea\u8868\u677f\u3001React \u7ec4\u4ef6\u3001HTML/CSS \u5e03\u5c40\uff0c\u6216\u4e3a\u4efb\u4f55 Web UI \u8bbe\u7f6e\u6837\u5f0f/\u7f8e\u5316\u65f6\uff09\u3002\u751f\u6210\u5bcc\u6709\u521b\u610f\u3001\u7cbe\u7f8e\u7684\u4ee3\u7801\u548c UI \u8bbe\u8ba1\uff0c\u907f\u514d\u901a\u7528\u7684 AI \u7f8e\u5b66\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/frontend-design/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/hosted-agents.md\" target=\"_blank\"><h3 class=\"card-title\">hosted-agents</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u6784\u5efa\u540e\u53f0\u4ee3\u7406\u201d\u3001\u201c\u90e8\u7f72\u6258\u7ba1\u4ee3\u7406\u201d\u3001\u201c\u521b\u5efa\u670d\u52a1\u5de5\u4f5c\u8005\u201d\u6216\u63d0\u53ca\u670d\u52a1\u5668\u7aef\u4ee3\u7406\u3001cron \u4f5c\u4e1a\u3001\u6301\u4e45\u5316\u8fdb\u7a0b\u6216\u4e91\u90e8\u7f72\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;create hosted coding agent&quot;, &quot;set up sandboxed execution&quot;, &quot;implement multiplayer agent&quot;, or</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/hosted-agents/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/internal-comms.md\" target=\"_blank\"><h3 class=\"card-title\">internal-comms</h3><p class=\"card-desc\">\u4e00\u7ec4\u8d44\u6e90\uff0c\u5e2e\u52a9\u6211\u4f7f\u7528\u516c\u53f8\u559c\u6b22\u7684\u683c\u5f0f\u7f16\u5199\u5404\u79cd\u5185\u90e8\u6c9f\u901a\u6587\u6863\u3002\u5f53\u88ab\u8981\u6c42\u7f16\u5199\u67d0\u79cd\u5185\u90e8\u6c9f\u901a\uff08\u72b6\u6001\u62a5\u544a\u3001\u9886\u5bfc\u5c42\u66f4\u65b0\u30013P \u66f4\u65b0\u3001\u516c\u53f8\u901a\u8baf\u3001FAQ\u3001\u4e8b\u6545\u62a5\u544a\u3001\u9879\u76ee\u66f4\u65b0\u7b49\uff09\u65f6\uff0cClaude \u5e94\u4f7f\u7528\u6b64\u6280\u80fd\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/internal-comms/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/mcp-builder.md\" target=\"_blank\"><h3 class=\"card-title\">mcp-builder</h3><p class=\"card-desc\">\u521b\u5efa\u9ad8\u8d28\u91cf MCP\uff08Model Context Protocol\uff09\u670d\u52a1\u5668\u7684\u6307\u5357\uff0c\u4f7f LLM \u80fd\u591f\u901a\u8fc7\u7cbe\u5fc3\u8bbe\u8ba1\u7684\u5de5\u5177\u4e0e\u5916\u90e8\u670d\u52a1\u4ea4\u4e92\u3002\u5728\u6784\u5efa MCP \u670d\u52a1\u5668\u4ee5\u96c6\u6210\u5916\u90e8 API \u6216\u670d\u52a1\u65f6\u4f7f\u7528\uff0c\u65e0\u8bba\u662f\u5728 Python (FastMCP) \u8fd8\u662f Node/TypeScript (MCP SDK) \u4e2d\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/mcp-builder/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/memory-systems.md\" target=\"_blank\"><h3 class=\"card-title\">memory-systems</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u5b9e\u73b0\u4ee3\u7406\u8bb0\u5fc6\u201d\u3001\u201c\u8de8\u4f1a\u8bdd\u6301\u4e45\u5316\u72b6\u6001\u201d\u3001\u201c\u6784\u5efa\u77e5\u8bc6\u56fe\u8c31\u201d\u6216\u63d0\u53ca\u5411\u91cf\u5b58\u50a8\u3001\u5b9e\u4f53\u8bb0\u5fc6\u3001\u77ed\u671f/\u957f\u671f\u8bb0\u5fc6\u6216\u56de\u5fc6\u673a\u5236\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;persist state across sessions&quot;, &quot;build knowledge graph&quot;, &quot;track entities&quot;, or mentions memory</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/memory-systems/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/multi-agent-patterns.md\" target=\"_blank\"><h3 class=\"card-title\">multi-agent-patterns</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u8bbe\u8ba1\u591a\u4ee3\u7406\u7cfb\u7edf\u201d\u3001\u201c\u5b9e\u73b0\u76d1\u7763\u8005\u6a21\u5f0f\u201d\u3001\u201c\u521b\u5efa\u7fa4\u4f53\u67b6\u6784\u201d\u6216\u63d0\u53ca\u591a\u4ee3\u7406\u6a21\u5f0f\u3001\u4e0a\u4e0b\u6587\u9694\u79bb\u3001\u4ee3\u7406\u4ea4\u63a5\u6216\u5e76\u884c\u6267\u884c\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;implement supervisor pattern&quot;, &quot;create swarm architecture&quot;, &quot;coordinate multiple agents&quot;, or m</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/multi-agent-patterns/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/pdf.md\" target=\"_blank\"><h3 class=\"card-title\">pdf</h3><p class=\"card-desc\">\u5168\u9762\u7684 PDF \u64cd\u4f5c\u5de5\u5177\u5305\uff0c\u7528\u4e8e\u63d0\u53d6\u6587\u672c\u548c\u8868\u683c\u3001\u521b\u5efa\u65b0 PDF\u3001\u5408\u5e76/\u62c6\u5206\u6587\u6863\u4ee5\u53ca\u5904\u7406\u8868\u5355\u3002\u5f53 Claude \u9700\u8981\u586b\u5199 PDF \u8868\u5355\u6216\u4ee5\u7f16\u7a0b\u65b9\u5f0f\u5927\u89c4\u6a21\u5904\u7406\u3001\u751f\u6210\u6216\u5206\u6790 PDF \u6587\u6863\u65f6\u4f7f\u7528\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/pdf/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/pptx.md\" target=\"_blank\"><h3 class=\"card-title\">pptx</h3><p class=\"card-desc\">\u6f14\u793a\u6587\u7a3f\u521b\u5efa\u3001\u7f16\u8f91\u548c\u5206\u6790\u3002\u5f53 Claude \u9700\u8981\u5904\u7406\u6f14\u793a\u6587\u7a3f\uff08.pptx \u6587\u4ef6\uff09\u65f6\u4f7f\u7528\uff0c\u5305\u62ec\uff1a(1) \u521b\u5efa\u65b0\u6f14\u793a\u6587\u7a3f\uff0c(2) \u4fee\u6539\u6216\u7f16\u8f91\u5185\u5bb9\uff0c(3) \u4f7f\u7528\u5e03\u5c40\uff0c(4) \u6dfb\u52a0\u8bc4\u8bba\u6216\u6f14\u8bb2\u8005\u5907\u6ce8\uff0c\u6216\u4efb\u4f55\u5176\u4ed6\u6f14\u793a\u6587\u7a3f\u4efb\u52a1</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/pptx/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/project-development.md\" target=\"_blank\"><h3 class=\"card-title\">project-development</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u542f\u52a8 LLM \u9879\u76ee\u201d\u3001\u201c\u8bbe\u8ba1\u6279\u5904\u7406\u6d41\u6c34\u7ebf\u201d\u3001\u201c\u8bc4\u4f30\u4efb\u52a1\u6a21\u578b\u5339\u914d\u5ea6\u201d\u6216\u63d0\u53ca\u6d41\u6c34\u7ebf\u67b6\u6784\u3001\u4ee3\u7406\u8f85\u52a9\u5f00\u53d1\u3001\u6210\u672c\u4f30\u7b97\u6216\u9879\u76ee\u89c4\u5212\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 &quot;design batch pipeline&quot;, &quot;evaluate task-model fit&quot;, &quot;structure agent project&quot;, or mentio</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/project-development/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/reasoning-trace-optimizer.md\" target=\"_blank\"><h3 class=\"card-title\">reasoning-trace-optimizer</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u8c03\u8bd5\u4ee3\u7406\u63a8\u7406\u201d\u3001\u201c\u4f18\u5316\u601d\u7ef4\u94fe\u201d\u3001\u201c\u5206\u6790\u601d\u8003\u8fc7\u7a0b\u201d\u6216\u63d0\u53ca\u63a8\u7406\u75d5\u8ff9\u3001CoT \u4f18\u5316\u6216\u8c03\u8bd5\u63d0\u793a\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002 on &#39;debug agent&#39;, &#39;optimize prompt&#39;, &#39;analyze reasoning&#39;, &#39;why did the agent fail&#39;, &#39;improve agent perf</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/examples/interleaved_thinking/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/skill-collector.md\" target=\"_blank\"><h3 class=\"card-title\">skill-collector</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u63d0\u4f9b GitHub \u4ed3\u5e93\u94fe\u63a5\u5e76\u5e0c\u671b\u6536\u96c6\u6216\u67e5\u770b\u8be5\u4ed3\u5e93\u7684 Skill \u65f6\u4f7f\u7528\u3002\u6b64 Skill \u81ea\u52a8\u626b\u63cf\u4ed3\u5e93\u3001\u6536\u96c6 SKILL.md\u3001\u652f\u6301 Agent \u6267\u884c\u7ffb\u8bd1\uff0c\u5e76\u751f\u6210\u672c\u5730 Docsify \u7f51\u7ad9\u8fdb\u884c\u5c55\u793a\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/Kkkika/github-skill-collector/blob/main/.trae/skills/skill-collector/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#3 Kkkika/github-skill-collector</span></div></a><a class=\"card\" href=\"#/skill-pages/skill-creator.md\" target=\"_blank\"><h3 class=\"card-title\">skill-creator</h3><p class=\"card-desc\">\u521b\u5efa\u9ad8\u6548 Skills \u7684\u6307\u5357\u3002\u5f53\u7528\u6237\u9700\u8981\u521b\u5efa\u65b0\u7684 skill\uff08\u6216\u66f4\u65b0\u73b0\u6709 skill\uff09\u4ee5\u901a\u8fc7\u4e13\u4e1a\u77e5\u8bc6\u3001\u5de5\u4f5c\u6d41\u7a0b\u6216\u5de5\u5177\u96c6\u6210\u6269\u5c55 Claude \u7684\u80fd\u529b\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/skill-creator/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/skill-creator-2.md\" target=\"_blank\"><h3 class=\"card-title\">skill-creator</h3><p class=\"card-desc\">\u521b\u5efa\u9ad8\u6548 Skills \u7684\u6307\u5357\u3002\u5f53\u7528\u6237\u9700\u8981\u521b\u5efa\u65b0\u7684 skill\uff08\u6216\u66f4\u65b0\u73b0\u6709 skill\uff09\u4ee5\u901a\u8fc7\u4e13\u4e1a\u77e5\u8bc6\u3001\u5de5\u4f5c\u6d41\u7a0b\u6216\u5de5\u5177\u96c6\u6210\u6269\u5c55 Claude \u7684\u80fd\u529b\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/Kkkika/github-skill-collector/blob/main/.trae/skills/skill-creator/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#3 Kkkika/github-skill-collector</span></div></a><a class=\"card\" href=\"#/skill-pages/skill-template.md\" target=\"_blank\"><h3 class=\"card-title\">skill-template</h3><p class=\"card-desc\">\u7528\u4e8e\u521b\u5efa\u65b0\u7684\u4e0a\u4e0b\u6587\u5de5\u7a0b\u4ee3\u7406\u6280\u80fd\u7684\u6a21\u677f\u3002\u5728\u5411\u96c6\u5408\u4e2d\u6dfb\u52a0\u65b0\u6280\u80fd\u65f6\u4f7f\u7528\u6b64\u6a21\u677f\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/template/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/slack-gif-creator.md\" target=\"_blank\"><h3 class=\"card-title\">slack-gif-creator</h3><p class=\"card-desc\">\u7528\u4e8e\u521b\u5efa\u9488\u5bf9 Slack \u4f18\u5316\u7684\u52a8\u753b GIF \u7684\u77e5\u8bc6\u548c\u5b9e\u7528\u5de5\u5177\u3002\u63d0\u4f9b\u7ea6\u675f\u3001\u9a8c\u8bc1\u5de5\u5177\u548c\u52a8\u753b\u6982\u5ff5\u3002\u5f53\u7528\u6237\u8bf7\u6c42 Slack \u7684\u52a8\u753b GIF \u65f6\u4f7f\u7528\uff0c\u4f8b\u5982&quot;\u4e3a Slack \u5236\u4f5c\u4e00\u4e2a X \u505a Y \u7684 GIF&quot;\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/slack-gif-creator/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/template-skill.md\" target=\"_blank\"><h3 class=\"card-title\">template-skill</h3><p class=\"card-desc\">\u66ff\u6362\u4e3a\u6280\u80fd\u7684\u63cf\u8ff0\u4ee5\u53ca Claude \u4f55\u65f6\u5e94\u8be5\u4f7f\u7528\u5b83\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/template/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/theme-factory.md\" target=\"_blank\"><h3 class=\"card-title\">theme-factory</h3><p class=\"card-desc\">\u7528\u4e3b\u9898\u4e3a artifacts \u8bbe\u7f6e\u6837\u5f0f\u7684\u5de5\u5177\u5305\u3002\u8fd9\u4e9b artifacts \u53ef\u4ee5\u662f\u5e7b\u706f\u7247\u3001\u6587\u6863\u3001\u62a5\u544a\u3001HTML \u843d\u5730\u9875\u7b49\u3002\u6709 10 \u4e2a\u9884\u8bbe\u4e3b\u9898\uff0c\u5305\u542b\u989c\u8272/\u5b57\u4f53\uff0c\u60a8\u53ef\u4ee5\u5c06\u5176\u5e94\u7528\u4e8e\u5df2\u521b\u5efa\u7684\u4efb\u4f55 artifact\uff0c\u6216\u8005\u5373\u65f6\u751f\u6210\u65b0\u4e3b\u9898\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/theme-factory/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/tool-design.md\" target=\"_blank\"><h3 class=\"card-title\">tool-design</h3><p class=\"card-desc\">\u5f53\u7528\u6237\u8981\u6c42\u201c\u8bbe\u8ba1\u4ee3\u7406\u5de5\u5177\u201d\u3001\u201c\u521b\u5efa\u5de5\u5177\u63cf\u8ff0\u201d\u3001\u201c\u964d\u4f4e\u5de5\u5177\u590d\u6742\u6027\u201d\u6216\u63d0\u53ca MCP \u5de5\u5177\u3001\u5de5\u5177\u6574\u5408\u3001API \u8bbe\u8ba1\u6216\u4ee3\u7406-\u5de5\u5177\u63a5\u53e3\u65f6\u4f7f\u7528\u6b64\u6280\u80fd\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/main/skills/tool-design/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#1 muratcankoylan/Agent-Skills-for-Context-Engineering</span></div></a><a class=\"card\" href=\"#/skill-pages/web-artifacts-builder.md\" target=\"_blank\"><h3 class=\"card-title\">web-artifacts-builder</h3><p class=\"card-desc\">\u4f7f\u7528\u73b0\u4ee3\u524d\u7aef Web \u6280\u672f\uff08React\u3001Tailwind CSS\u3001shadcn/ui\uff09\u521b\u5efa\u590d\u6742\u7684\u3001\u591a\u7ec4\u4ef6 claude.ai HTML artifacts \u7684\u5de5\u5177\u5957\u4ef6\u3002\u7528\u4e8e\u9700\u8981\u72b6\u6001\u7ba1\u7406\u3001\u8def\u7531\u6216 shadcn/ui \u7ec4\u4ef6\u7684\u590d\u6742 artifacts - \u4e0d\u9002\u7528\u4e8e\u7b80\u5355\u7684\u5355\u6587\u4ef6 HTML/JSX artifacts\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/web-artifacts-builder/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/webapp-testing.md\" target=\"_blank\"><h3 class=\"card-title\">webapp-testing</h3><p class=\"card-desc\">\u4f7f\u7528 Playwright \u4e0e\u672c\u5730 Web \u5e94\u7528\u7a0b\u5e8f\u4ea4\u4e92\u548c\u6d4b\u8bd5\u7684\u5de5\u5177\u5305\u3002\u652f\u6301\u9a8c\u8bc1\u524d\u7aef\u529f\u80fd\u3001\u8c03\u8bd5 UI \u884c\u4e3a\u3001\u6355\u83b7\u6d4f\u89c8\u5668\u622a\u56fe\u548c\u67e5\u770b\u6d4f\u89c8\u5668\u65e5\u5fd7\u3002</p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/webapp-testing/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a><a class=\"card\" href=\"#/skill-pages/xlsx.md\" target=\"_blank\"><h3 class=\"card-title\">xlsx</h3><p class=\"card-desc\">\u5168\u9762\u7684\u7535\u5b50\u8868\u683c\u521b\u5efa\u3001\u7f16\u8f91\u548c\u5206\u6790\u529f\u80fd\uff0c\u652f\u6301\u516c\u5f0f\u3001\u683c\u5f0f\u3001\u6570\u636e\u5206\u6790\u548c\u53ef\u89c6\u5316\u3002\u5f53 Claude \u9700\u8981\u5904\u7406\u7535\u5b50\u8868\u683c\uff08.xlsx\u3001.xlsm\u3001.csv\u3001.tsv \u7b49\uff09\u65f6\u4f7f\u7528\uff0c\u5305\u62ec\uff1a(1) \u521b\u5efa\u5e26\u6709\u516c\u5f0f\u548c\u683c\u5f0f\u7684\u65b0\u7535\u5b50\u8868\u683c\uff0c(2) \u8bfb\u53d6\u6216\u5206\u6790\u6570\u636e\uff0c(3) \u4fee\u6539\u73b0\u6709\u7535\u5b50\u8868\u683c\u540c\u65f6\u4fdd\u7559\u516c\u5f0f\uff0c(4) \u7535\u5b50\u8868\u683c\u4e2d\u7684\u6570\u636e\u5206\u6790\u548c\u53ef\u89c6\u5316\uff0c\u6216 (5) </p><div class=\"card-footer\"><span class=\"card-link\" data-href=\"https://github.com/MarcelLeon/skills-zh/blob/main/skills/xlsx/SKILL.md\" onclick=\"event.preventDefault();event.stopPropagation();window.open(this.getAttribute('data-href'),'_blank')\">\u539f SKILL.md</span><span class=\"card-badge\">#2 MarcelLeon/skills-zh</span></div></a>\n  </div>\n\n  <footer class=\"site-footer\">\n  <p style=\"text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;\">Author: kika</p>\n  <h2>\u4ed3\u5e93\u5217\u8868\uff08\u6309 Star \u964d\u5e8f\uff09</h2>\n  <ul class=\"repo-list\">\n  <li><span class=\"repo-rank\">#1</span><a href=\"https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering\" target=\"_blank\" rel=\"noopener\">muratcankoylan/Agent-Skills-for-Context-Engineering</a> <span class=\"stars\">\u2605 8.2k</span></li><li><span class=\"repo-rank\">#2</span><a href=\"https://github.com/MarcelLeon/skills-zh\" target=\"_blank\" rel=\"noopener\">MarcelLeon/skills-zh</a> <span class=\"stars\">\u2605 5</span></li><li><span class=\"repo-rank\">#3</span><a href=\"https://github.com/Kkkika/github-skill-collector\" target=\"_blank\" rel=\"noopener\">Kkkika/github-skill-collector</a> <span class=\"stars\">\u2605 0</span></li>\n  </ul>\n  </footer>\n</div>\n";
+
+          hook.beforeEach(function(content) {
+            // 如果访问根路径，直接返回 HOME_HTML
+            if (vm.route.path === '/') {
+              return HOME_HTML;
+            }
+            return content;
+          });
+
+          // 侧边栏模式切换：在详情页只显示当前 Skill 的目录
+          hook.doneEach(function() {
+            const nav = document.querySelector('.sidebar-nav');
+            if (!nav) return;
+            
+            const path = vm.route.path;
+            // 简单判断：如果在 skill-pages 目录下
+            if (path.indexOf('/skill-pages/') === 0) {
+                // 1. 获取当前激活的链接（Skill 标题）和对应的 TOC
+                const activeLi = nav.querySelector('li.active');
+                const activeLink = activeLi ? activeLi.querySelector('a') : null;
+                const toc = activeLi ? activeLi.querySelector('.app-sub-sidebar') : null;
+
+                // 2. 创建自定义侧边栏容器
+                const newContent = document.createElement('div');
+                newContent.className = 'custom-sidebar-content';
+                newContent.style.padding = '10px 0 0 5px';
+
+                // 3. 添加“返回首页”链接
+                const homeLink = document.createElement('a');
+                homeLink.href = '#/';
+                homeLink.textContent = '← 返回首页';
+                homeLink.style.display = 'block';
+                homeLink.style.marginBottom = '1.5rem';
+                homeLink.style.fontWeight = 'bold';
+                homeLink.style.color = 'var(--accent)';
+                homeLink.style.textDecoration = 'none';
+                newContent.appendChild(homeLink);
+
+                // 4. 添加当前 Skill 标题
+                if (activeLink) {
+                    const title = document.createElement('div');
+                    title.textContent = activeLink.textContent;
+                    title.style.fontWeight = 'bold';
+                    title.style.marginBottom = '0.5rem';
+                    title.style.color = 'var(--text-normal)';
+                    title.style.paddingLeft = '0'; 
+                    newContent.appendChild(title);
+                }
+
+                // 5. 添加 TOC
+                if (toc) {
+                    // 克隆 TOC 节点
+                    const newToc = toc.cloneNode(true);
+                    newToc.style.marginLeft = '0'; // 重置左边距
+                    newToc.style.paddingLeft = '10px';
+                    newContent.appendChild(newToc);
+                } else {
+                    const noToc = document.createElement('p');
+                    noToc.textContent = '（本文档无目录）';
+                    noToc.style.fontSize = '0.85rem';
+                    noToc.style.color = 'var(--text-muted)';
+                    noToc.style.paddingLeft = '0';
+                    newContent.appendChild(noToc);
+                }
+
+                // 6. 替换原有侧边栏内容
+                nav.innerHTML = '';
+                nav.appendChild(newContent);
+            }
+          });
+
+          hook.beforeEach(function(content) {
+            if (vm.route.path === '/') return content; // 首页不需要再次处理 Frontmatter
+
+            // 匹配 Frontmatter (兼容 Windows \r\n 和 Unix \n)
+            const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+            if (!match) return content;
+
+            const fmText = match[1];
+            const metadata = {};
+            
+            // 简单的键值对解析
+            let currentKey = null;
+            fmText.split(/\r?\n/).forEach(function(line) {
+                // 匹配 key: value
+                const m = line.match(/^([a-z_]+):\s*(.*)$/);
+                if (m) {
+                  currentKey = m[1];
+                  metadata[currentKey] = m[2];
+                } else if (currentKey && line.startsWith('  ')) {
+                  // 处理多行值
+                  metadata[currentKey] += ' ' + line.trim();
+                }
+            });
+
+            // 构建自定义 HTML
+            let metaHtml = '';
+            
+            // 1. 使用 metadata.name 作为页面标题
+            if (metadata.name) {
+                metaHtml += '<h1>' + metadata.name + '</h1>';
+            }
+            
+            // 2. 元数据卡片
+            metaHtml += '<div class="skill-metadata" style="margin-bottom: 20px; padding: 15px; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px;">';
+            
+            if (metadata.description) {
+               // 移除开头可能的 > 符号
+               let cleanDesc = metadata.description.replace(/^>\s*/, '');
+               metaHtml += '<p style="color: var(--text-muted);"><strong>📝 简介：</strong> ' + cleanDesc + '</p>';
+            }
+            
+            const infos = [];
+            if (metadata.repo) infos.push('📦 仓库: <a href="https://github.com/' + metadata.repo + '" target="_blank">' + metadata.repo + '</a>');
+            if (metadata.raw_url) infos.push('🔗 <a href="' + metadata.raw_url + '" target="_blank">原 SKILL.md</a>');
+            if (metadata.stars) infos.push('⭐ Stars: ' + metadata.stars);
+            if (metadata.file_last_updated) {
+                const date = metadata.file_last_updated.split('T')[0];
+                infos.push('📅 更新: ' + date);
+            }
+
+            if (infos.length > 0) {
+                metaHtml += '<p style="margin-bottom: 0; color: var(--text-muted); font-size: 0.9em;">' + infos.join(' &nbsp; | &nbsp; ') + '</p>';
+            }
+            
+            metaHtml += '</div>';
+
+            // 替换 Frontmatter
+            return content.replace(match[0], metaHtml);
+          });
+        }
+      ]
+    }
+  </script>
+  <script src="https://unpkg.com/docsify/lib/docsify.min.js"></script>
+  <script src="https://unpkg.com/docsify/lib/plugins/search.min.js"></script>
+  <script src="https://unpkg.com/docsify/lib/plugins/zoom-image.min.js"></script>
+  <script src="https://unpkg.com/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+</body>
+</html>
